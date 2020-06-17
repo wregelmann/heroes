@@ -1,0 +1,6 @@
+{
+    "require": {
+        "cboden/ratchet": "^0.4.2",
+        "symfony/http-foundation": "^5.1"
+    }
+}

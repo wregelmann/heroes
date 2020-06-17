@@ -1,0 +1,164 @@
+body {
+    position: absolute;
+    top: 0; right: 0; bottom: 0; left: 0;
+    background: #eee;
+    overflow: hidden;
+}
+
+.bold {
+    font-weight: 800 !important;
+}
+.clickable:hover {
+    cursor: pointer;
+}
+
+.uk-progress {
+    
+    &::-webkit-progress-bar {
+        background: #333;
+    }
+    
+    &[p="5"]::-webkit-progress-value {
+        background: rgb(0,255,0);
+    }
+    &[p="4"]::-webkit-progress-value {
+        background: rgb(125,255,0);
+    }
+    &[p="3"]::-webkit-progress-value {
+        background: rgb(255,255,0);
+    }
+    &[p="2"]::-webkit-progress-value {
+        background: rgb(255,125,0);
+    }
+    &[p="1"]::-webkit-progress-value {
+        background: rgb(255,0,0);
+    }
+    
+}
+
+.container {
+    width: calc(100% - 40px - 64px);
+    height: calc(100% - 40px);
+    margin: 20px;
+    display: grid;
+    gap: 20px;
+    grid-template-areas:
+        "t c"
+        "v c";
+    grid-template-columns: minmax(auto, 1200px) minmax(360px, auto);
+    grid-template-rows: minmax(auto, 720px) auto;
+}
+
+.tabletop-area {
+    grid-area: t;
+}
+
+.video-grid-area {
+    
+    position: relative;
+    right: 5px;
+    width: calc(100% + 10px);
+    grid-area: v;   
+    display: flex;
+    flex-flow: row wrap;
+    justify-content: space-around;
+    align-content: flex-start;
+    gap: 10px;
+    
+    .video-grid-area__item {
+        
+        margin-left: 5px;
+        margin-right: 5px;
+        margin-bottom: 20px;
+        
+        > div {
+            width: 230px;
+            height: 134px;
+        }
+        
+        > progress {
+            margin-top: 10px;
+            margin-bottom: 0;
+        }
+        
+        span {
+            color: #eee;
+            background-color: rgba(51,51,51,.8);
+            font-weight: 500;
+            padding: 0 20px;
+            border-radius: 5px 5px 0 0;
+        }
+        
+    }
+    
+}
+
+.chat-area {
+    grid-area: c;
+    display: flex;
+    flex-direction: column;
+    
+    .chat-area__chatbox {
+        flex-grow: 1;
+    }
+    
+    .chat-area__alias {
+        font-weight: 500;
+    }
+    
+    .chat-area__textbox {
+        height: 200px;
+        resize: none;
+    }
+    
+}
+
+.menu {
+    
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+    top: 0; right: 0; bottom: 0;
+    width: 64px;
+    background: #333 !important;
+    text-align: center;
+    
+    > i {
+        font-size: 2.5em;
+        margin: 20px 0;
+    }
+    
+    > i:hover {
+        color: #eee;
+        cursor: pointer;
+    }
+    
+}
+
+.player-select-modal {
+    
+    text-align: center;
+
+    li:hover {
+        font-weight: bold;
+        color: black;
+        cursor: pointer;
+    }
+    
+}
+
+.character-detail-modal {
+    
+    .character-detail-modal__abilities th, td {
+        text-align: center;
+    }
+    
+}
+
+.spellbook-modal {
+    
+    th, td {
+        text-align: center;
+    }
+    
+}
