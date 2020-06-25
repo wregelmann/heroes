@@ -5,6 +5,14 @@ body {
     overflow: hidden;
 }
 
+video {
+    transform: rotateY(180deg);
+}
+
+.reverse {
+    transform: scale(-1, 1);
+}
+
 .bold {
     font-weight: 800 !important;
 }
@@ -46,11 +54,90 @@ body {
         "t c"
         "v c";
     grid-template-columns: minmax(auto, 1200px) minmax(360px, auto);
-    grid-template-rows: minmax(auto, 720px) auto;
+    grid-template-rows: minmax(auto, 720px) minmax(0,1fr);
+}
+
+.active {
+    color: white !important;
 }
 
 .tabletop-area {
+    
+    position: relative;
     grid-area: t;
+    background: black;
+    text-align: center;
+    display: flex;
+    flex-flow: row;
+    
+    canvas {
+        position: absolute;
+    }
+    
+    video {
+        background: black;
+        height: 100%;
+        width: 100%;
+    }
+    
+    .tabletop-area__video-container {
+        flex-grow: 1;
+        position: relative;
+        height: 100%;
+    }
+    
+    .tabletop-area__palette-dropdown {
+        background: #333;
+        border-radius: 5px;
+        width: 240px;
+    }
+    
+    .tabletop-area__drawing-menu {
+     
+        position: absolute;
+        display: flex;
+        flex-direction: row;
+        background: rgba(55,55,55,.6);
+        height: 64px;
+        border-bottom-left-radius: 5px;
+        border-bottom-right-radius: 5px;
+        align-items: center;
+               
+        > i {
+            font-size: 2.5em;
+            margin: 0 20px;
+        }
+
+        > i:hover {
+            color: #eee;
+            cursor: pointer;
+        }
+
+        > .spacer {
+            flex-grow: 1;
+        }
+        
+    }
+    
+    .tabletop-area__initiative-tracker {
+        
+        display: flex;
+        flex-direction: column;
+        background: white;
+        width: 240px;
+        text-align: left;
+        
+        ul {
+            flex-grow: 1;
+            overflow-y: auto;
+        }
+        
+        button {
+            width: 100%;
+        }
+        
+    }
+    
 }
 
 .video-grid-area {
@@ -71,9 +158,25 @@ body {
         margin-right: 5px;
         margin-bottom: 20px;
         
-        > div {
-            width: 230px;
-            height: 134px;
+        > div.uk-card {
+            
+            text-align: center;
+            width: 182px;
+            height: 137px;
+            background: black;
+            
+            .video-grid-area__mute-button {
+                display: none;
+                font-size: 1.25em;       
+                background: rgba(51,51,51,.6);
+                height: 40px;
+                width: 40px;
+                border-radius: 50%;     
+                &[muted] {
+                    color: #eee;
+                }
+            }
+            
         }
         
         > progress {
@@ -83,10 +186,18 @@ body {
         
         span {
             color: #eee;
+            height: calc(1em + 10px);
+            width: calc(100% - 20px);
+            overflow-y: hidden;
             background-color: rgba(51,51,51,.8);
             font-weight: 500;
             padding: 0 20px;
             border-radius: 5px 5px 0 0;
+        }
+        
+        video {
+            height: 100%;
+            background: black;
         }
         
     }
@@ -94,12 +205,47 @@ body {
 }
 
 .chat-area {
+    
     grid-area: c;
-    display: flex;
-    flex-direction: column;
+    
+    > div {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
     
     .chat-area__chatbox {
+        
         flex-grow: 1;
+        max-height: calc(100% - 260px);
+        overflow-y: auto;
+        
+        display: flex;
+        flex-direction: column-reverse;
+        
+        ul {
+            padding: 20px;
+        }
+        
+    }
+    
+    .chat-area__dice {
+        
+        width: 100%;
+        background: #eee;
+        text-align: center;
+        font-size: 2em;
+        
+        > table {
+            
+            margin-bottom: 0;
+        
+            i.fas:hover {
+                cursor: pointer;
+            }
+        
+        }
+        
     }
     
     .chat-area__alias {
@@ -107,7 +253,7 @@ body {
     }
     
     .chat-area__textbox {
-        height: 200px;
+        min-height: 200px;
         resize: none;
     }
     
@@ -133,6 +279,10 @@ body {
         cursor: pointer;
     }
     
+    > .spacer {
+        flex-grow: 1;
+    }
+    
 }
 
 .player-select-modal {
@@ -153,12 +303,37 @@ body {
         text-align: center;
     }
     
+    .uk-modal-footer {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-evenly;
+    }
+    
 }
 
 .spellbook-modal {
     
     th, td {
         text-align: center;
+    }
+    
+}
+
+.dm-spells-modal, .dm-items-modal, .dm-features-modal, .dm-monsters-modal {
+    
+    .uk-modal-body {
+        
+        max-height: 60vh;
+        overflow-y: auto;
+    
+        table {
+            border-spacing: 10px 0;
+        }
+    
+    }
+    
+    .toggle > .uk-align-right {
+        margin-bottom: 0 !important;
     }
     
 }

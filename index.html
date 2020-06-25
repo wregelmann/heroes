@@ -7,13 +7,16 @@
     
     <link rel="icon" href="favicon.png">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/uikit@3.5.4/dist/css/uikit.min.css">
+    <link rel="stylesheet" href="https://pro.fontawesome.com/releases/v5.13.0/css/all.css" integrity="sha384-IIED/eyOkM6ihtOiQsX2zizxFBphgnv1zbe1bKA+njdFzkr6cDNy16jfIKWu4FNH" crossorigin="anonymous">
     <link rel="stylesheet/less" href="main.less">
     
-    <script src="main.js" defer></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/less.js/3.11.3/less.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/uikit@3.5.4/dist/js/uikit.min.js"></script>
-    <link rel="stylesheet" href="https://pro.fontawesome.com/releases/v5.13.0/css/all.css" integrity="sha384-IIED/eyOkM6ihtOiQsX2zizxFBphgnv1zbe1bKA+njdFzkr6cDNy16jfIKWu4FNH" crossorigin="anonymous">
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/showdown@1.9.0/dist/showdown.min.js"></script>
+    <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
+    <script src="https://unpkg.com/peerjs@1.2.0/dist/peerjs.min.js"></script>
+    <script src="main.js" defer></script>
 
 </head>
 
@@ -23,26 +26,73 @@
     <div class="loading-box" style="display:none;" uk-spinner="ratio: 2;"></div>
     
     <div class="container">
-        <div class="tabletop-area uk-card uk-card-default"></div>
+        <div class="tabletop-area uk-card uk-card-default">
+            <div class="tabletop-area__video-container">
+                <video autoplay playsinline></video>
+                <canvas></canvas>
+                <nav class="tabletop-area__drawing-menu uk-position-top-center">
+                    <i class="fas fa-palette"></i>
+                    <div class="tabletop-area__palette-dropdown" uk-dropdown="pos: bottom-center; animation: uk-animation-slide-top-small; offset: 20;">
+                        <div class="uk-child-width-1-3" uk-grid>
+                            <div><span class="uk-badge clickable" style="background: red"></span></div>
+                            <div><span class="uk-badge clickable" style="background: gold;"></span></div>
+                            <div><span class="uk-badge clickable" style="background: greenyellow"></span></div>
+                            <div><span class="uk-badge clickable"></span></div>
+                            <div><span class="uk-badge clickable" style="background: orchid"></span></div>
+                            <div><span class="uk-badge clickable" style="background: white"></span></div>
+                        </div>
+                    </div>
+                    <i class="fas fa-paint-brush active"></i>
+                    <i class="fas fa-eraser"></i>
+                    <i class="fas fa-trash dm-visible" style="display: none;"></i>
+                </nav>
+            </div>
+            <div class="tabletop-area__initiative-tracker" style="display: none;">
+                <ul class="uk-list uk-list-striped"></ul>
+                <button class="uk-button uk-button-primary"><i class="fas fa-plus"></i> Add Combatant</button>
+            </div>
+        </div>
         <div class="chat-area uk-card uk-card-default">
-            <div class="chat-area__chatbox"></div>
-            <input class="chat-area__alias dm-visible uk-input" type="text" placeholder="Alias" style="display: none;">
-            <textarea class="chat-area__textbox uk-textarea" placeholder="Say something..."></textarea>
+            <div>
+                <div class="chat-area__chatbox"><ul class="uk-list uk-list-divider"></ul></div>
+                <div class="chat-area__dice">
+                    <table class="uk-table">
+                        <tr>
+                            <td><i class="fas fa-dice-d4" uk-tooltip="d4" data-sides="4"></i></td>
+                            <td><i class="fas fa-dice-d6" uk-tooltip="d6" data-sides="6"></i></td>
+                            <td><i class="fas fa-dice-d8" uk-tooltip="d8" data-sides="8"></i></td>
+                            <td><i class="fas fa-dice-d10" uk-tooltip="d10" data-sides="10"></i></td>
+                            <td><i class="fas fa-dice-d12" uk-tooltip="d12" data-sides="12"></i></td>
+                            <td><i class="fas fa-dice-d20" uk-tooltip="d20" data-sides="20"></i></td>
+                        </tr>
+                    </table>
+                </div>
+                <input class="chat-area__alias dm-visible uk-input" type="text" placeholder="Alias" style="display: none;">
+                <textarea class="chat-area__textbox uk-textarea" placeholder="Say something..."></textarea>
+            </div>
         </div>
         <div class="video-grid-area"></div>
         <nav class="menu">
             
             <i class="menu__party-icon fas fa-users dm-visible" uk-tooltip="title: Party; pos: left;" style="display: none;"></i>
-            <i class="menu__spells-icon fas fa-fire dm-visible" uk-tooltip="title: Spells; pos: left;" style="display: none;"></i>
-            <i class="menu__items-icon fas fa-flask-potion dm-visible" uk-tooltip="title: Items; pos: left;" style="display: none;"></i>
-            <i class="menu__monsters-icon fas fa-skull dm-visible" uk-tooltip="title: Monsters; pos: left;" style="display: none;"></i>
+            <i class="menu__dm-items-icon fas fa-flask-potion dm-visible" uk-tooltip="title: Items; pos: left;" style="display: none;"></i>
+            <i class="menu__dm-spells-icon fas fa-fire dm-visible" uk-tooltip="title: Spells; pos: left;" style="display: none;"></i>
+            <i class="menu__dm-features-icon fas fa-fist-raised dm-visible" uk-tooltip="title: Features; pos: left;" style="display: none;"></i>
+            <i class="menu__dm-monsters-icon fas fa-skull dm-visible" uk-tooltip="title: Monsters; pos: left;" style="display: none;"></i>
+            <i class="menu__dm-initiative-icon fas fa-repeat-1 dm-visible" uk-tooltip="title: Initiative; pos: left;" style="display: none;"></i>
             
             <i class="menu__character-icon fas fa-user-circle pc-visible" uk-tooltip="title: Character; pos: left;" style="display: none;"></i>
             <i class="menu__inventory-icon fas fa-sack pc-visible" uk-tooltip="title: Inventory; pos: left;" style="display: none;"></i>
             <i class="menu__spellbook-icon fas fa-book-spells pc-visible" uk-tooltip="title: Spellbook; pos: left;" style="display: none;"></i>
-            <i class="menu__attacks-icon fas fa-swords pc-visible" uk-tooltip="title: Attacks; pos: left;" style="display: none;"></i>
+            <!--<i class="menu__attacks-icon fas fa-swords pc-visible" uk-tooltip="title: Attacks; pos: left;" style="display: none;"></i>-->
             <i class="menu__features-icon fas fa-fist-raised pc-visible" uk-tooltip="title: Features; pos: left;" style="display: none;"></i>
             
+            <span class="spacer"></span>
+            
+            <!--<i class="menu__notes-icon fas fa-pencil pc-visible dm-visible" uk-tooltip="title: Notepad; pos: left;" style="display: none;"></i>-->
+            
+            <i class="menu__dm-music-icon fas fa-music dm-visible" uk-tooltip="title: Music; pos: left;" style="display: none;"></i>
+            <i class="menu__settings-icon fas fa-cog pc-visible dm-visible" uk-tooltip="title: Settings; pos: left;" style="display: none;"></i>
             
         </nav>
     </div>
@@ -91,16 +141,130 @@
                     </tbody>
                 </table>
                 <div><b>Skills:</b> <ul class="character-detail-modal__skills uk-list uk-list-divider"></ul></div>
+                <b>Proficiencies:</b>
+                <div class="character-detail-modal__proficiencies"></div>
+            </div>
+            <div class="uk-modal-footer">
+                <button class="character-detail-modal__spells-button uk-button uk-button-default">Attacks</button>
+                <button class="character-detail-modal__spells-button uk-button uk-button-default">Spells</button>
+                <button class="character-detail-modal__inventory-button uk-button uk-button-default">Inventory</button>
+                <button class="character-detail-modal__features-button uk-button uk-button-default">Features</button>
             </div>
         </div>
     </div>
     
     <div class="spellbook-modal" uk-modal>
+        <div class="uk-modal-dialog"></div>
+    </div>
+    
+    <div class="inventory-modal" uk-modal>
         <div class="uk-modal-dialog">
+            <div class="uk-modal-header">
+                <h3 class="uk-modal-title">Inventory</h3>
+            </div>
             <div class="uk-modal-body">
                 <ul uk-accordion></ul>
             </div>
         </div>
     </div>
-        
+    
+    <div class="features-modal" uk-modal>
+        <div class="uk-modal-dialog">
+            <div class="uk-modal-header">
+                <h3 class="uk-modal-title">Features</h3>
+            </div>
+            <div class="uk-modal-body">
+                <ul uk-accordion></ul>
+            </div>
+        </div>
+    </div>
+    
+    <div class="dm-spells-modal" uk-modal>
+        <div class="uk-modal-dialog">
+            <div class="uk-modal-header">
+                <input class="filter uk-input" type="text" placeholder="Filter...">
+            </div>
+            <div class="uk-modal-body">
+                <ul class="uk-list uk-list-striped" uk-accordion="toggle: > .toggle"></ul>
+            </div>
+            <div class="uk-modal-footer">
+                <a><i class="fas fa-plus"></i> Add Spell</a>
+            </div>
+        </div>
+    </div>
+    <div class="spell-add-modal" uk-modal>
+        <div class="uk-modal-dialog">
+            <div class="uk-modal-header">
+                <h3 class="uk-modal-title">New Spell</h3>
+            </div>
+            <div class="uk-modal-body">
+                
+            </div>
+            <div class="uk-modal-footer">
+                <button class="uk-button uk-button-primary uk-align-right">Submit</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="dm-items-modal" uk-modal>
+        <div class="uk-modal-dialog">
+            <div class="uk-modal-header">
+                <input class="filter uk-input" type="text" placeholder="Filter...">
+            </div>
+            <div class="uk-modal-body">
+                <ul class="uk-list uk-list-striped" uk-accordion="toggle: > .toggle"></ul>
+            </div>
+            <div class="uk-modal-footer">
+                <a><i class="fas fa-plus"></i> Add Item</a>
+            </div>
+        </div>
+    </div>
+    <div class="item-add-modal" uk-modal>
+        <div class="uk-modal-dialog">
+            <div class="uk-modal-header">
+                <h3 class="uk-modal-title">New Item</h3>
+            </div>
+            <div class="uk-modal-body">
+                <input class="item-add-modal__name uk-input uk-margin-bottom" type="text" placeholder="Name">
+                <select class="item-add-modal__type uk-select uk-margin-bottom">
+                    <option value="1">Item</option>
+                    <option value="2">Armor</option>
+                    <option value="1">Weapon</option>
+                </select>
+                <textarea class="item-add-modal__description uk-textarea" placeholder="Description"></textarea>
+            </div>
+            <div class="uk-modal-footer">
+                <button class="uk-button uk-button-primary uk-align-right">Submit</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="dm-features-modal" uk-modal>
+        <div class="uk-modal-dialog">
+            <div class="uk-modal-header">
+                <input class="filter uk-input" type="text" placeholder="Filter...">
+            </div>
+            <div class="uk-modal-body">
+                <ul class="uk-list uk-list-striped" uk-accordion="toggle: > .toggle"></ul>
+            </div>
+            <div class="uk-modal-footer">
+                <a><i class="fas fa-plus"></i> Add Feature</a>
+            </div>
+        </div>
+    </div>
+    <div class="feature-add-modal" uk-modal>
+        <div class="uk-modal-dialog">
+            <div class="uk-modal-header">
+                <h3 class="uk-modal-title">New Feature</h3>
+            </div>
+            <div class="uk-modal-body">
+                <input class="feature-add-modal__name uk-input uk-margin-bottom" type="text" placeholder="Name">
+                <textarea class="feature-add-modal__description uk-textarea" placeholder="Description"></textarea>
+            </div>
+            <div class="uk-modal-footer">
+                <button class="uk-button uk-button-primary uk-align-right">Submit</button>
+            </div>
+        </div>
+    </div>
+            
 </body>

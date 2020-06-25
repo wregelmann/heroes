@@ -36,13 +36,28 @@ final class Heroes extends Collection {
                     );
                 foreach ($return->classes as $i=>$class) {
                     $return->classes[$i]->spells = $heroes->query(
-                        "SELECT s.id, s.name FROM spell AS s
-                        INNER JOIN hero__class__spell AS hcs ON s.id = hcs.spell_id
-                        WHERE hcs.hero__class_id = ?
-                        ORDER BY s.name",
-                        [$class->id]
-                    );
+                            "SELECT s.id, s.name FROM spell AS s
+                            INNER JOIN hero__class__spell AS hcs ON s.id = hcs.spell_id
+                            WHERE hcs.hero__class_id = ?
+                            ORDER BY s.name",
+                            [$class->id]
+                        );
                 }
+                $return->features = $heroes->query(
+                        "SELECT f.id, f.name FROM feature AS f
+                        INNER JOIN hero__feature AS hf ON hf.feature_id = f.id
+                        WHERE hf.hero_id = ?
+                        ORDER BY f.name",
+                        [$this->params["id"]]
+                    );
+                $return->inventory = $heroes->query(
+                        "SELECT hi.item_id AS id, i.name, hi.quantity
+                        FROM hero__item AS hi
+                        INNER JOIN item AS i ON hi.item_id = i.id
+                        WHERE hi.hero_id = ?
+                        ORDER BY i.name",
+                        [$this->params["id"]]
+                    );
                 $return->saving_throws = array_column((array)$heroes->query(
                         "SELECT UPPER(a.abbreviation) AS abbr FROM ability AS a
                         INNER JOIN hero__saving_throw AS hs ON a.id = hs.ability_id
@@ -67,6 +82,132 @@ final class Heroes extends Collection {
         
         else {
             return (new Heroes_Connector)->query("SELECT id, name FROM hero"); 
+        }
+        
+    }
+    
+    public function update(){
+       
+        $heroes = new Heroes_Connector();
+        
+        foreach ($this->unsafe_params["add"]["items"] as $item) {
+            $result = $heroes->query(
+                    "SELECT id FROM hero__item WHERE hero_id = ? AND item_id = ?",
+                    [
+                        $this->params["id"],
+                        $item["id"]
+                    ]
+                );
+            if (count($result) == 0) {
+                $heroes->query(
+                    "INSERT INTO hero__item (hero_id, item_id, quantity) VALUES (?, ?, ?)",
+                    [
+                        $this->params["id"],
+                        $item["id"],
+                        $item["quantity"]
+                    ]
+                );
+            } else {
+                $heroes->query(
+                    "UPDATE hero__item SET quantity = quantity + ? WHERE id = ?",
+                    [
+                        $item["quantity"],
+                        $result[0]->id
+                    ]
+                );
+            }
+        }
+        foreach ($this->unsafe_params["add"]["features"] as $feature) {
+            $result = $heroes->query(
+                    "SELECT id FROM hero__feature WHERE hero_id = ? AND feature_id = ?",
+                    [
+                        $this->params["id"],
+                        $feature["id"]
+                    ]
+                );
+            if (count($result) == 0) {
+                $heroes->query(
+                    "INSERT INTO hero__feature (hero_id, feature_id) VALUES (?, ?)",
+                    [
+                        $this->params["id"],
+                        $feature["id"]
+                    ]
+                );
+            }
+        }
+        foreach ($this->unsafe_params["add"]["spells"] as $spell) {
+            $result = $heroes->query(
+                    "SELECT id FROM hero__class__spell WHERE hero__class_id = ? AND spell_id = ?",
+                    [
+                        $spell["heroClassId"],
+                        $spell["id"]
+                    ]
+                );
+            if (count($result) == 0) {
+                $heroes->query(
+                    "INSERT INTO hero__class__spell (hero__class_id, spell_id) VALUES (?, ?)",
+                    [
+                        $spell["heroClassId"],
+                        $spell["id"]
+                    ]
+                );
+            }
+        }
+        
+        foreach ($this->unsafe_params["remove"]["items"] as $item) {
+            $result = $heroes->query(
+                    "SELECT quantity FROM hero__item WHERE hero_id = ? AND item_id = ?",
+                    [
+                        $this->params["id"],
+                        $item["id"]
+                    ]
+                );
+            if ($result[0]->quantity < $item["quantity"] || !$item["quantity"]) {
+                $heroes->query(
+                    "DELETE FROM hero__item WHERE hero_id = ? AND item_id = ?",
+                    [
+                        $this->params["id"],
+                        $item["id"]
+                    ]
+                );
+            } else {
+                $heroes->query(
+                    "UPDATE hero__item SET quantity = quantity - ? WHERE hero_id = ? AND item_id = ?",
+                    [
+                        $item["quantity"],
+                        $this->params["id"],
+                        $item["id"]
+                    ]
+                );
+            }
+        }
+        foreach ($this->unsafe_params["remove"]["features"] as $feature) {
+            $heroes->query(
+                "DELETE FROM hero__feature WHERE hero_id = ? AND feature_id = ?",
+                [
+                    $this->params["id"],
+                    $feature["id"]
+                ]
+            );
+        }
+        foreach ($this->unsafe_params["remove"]["spells"] as $spell) {
+            $heroes->query(
+                "DELETE FROM hero__class__spell WHERE hero__class_id = ? AND spell_id = ?",
+                [
+                    $spell["heroClassId"],
+                    $spell["id"]
+                ]
+            );
+        }
+        
+        if (isset($this->unsafe_params["update"]["hp"])) {
+            $heroes->query(
+                "UPDATE hero SET hp = ? WHERE id = ?",
+                [
+                    $this->unsafe_params["update"]["hp"],
+                    $this->params["id"]
+                ]
+            );
         }
         
     }

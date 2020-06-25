@@ -3,7 +3,7 @@
 require_once __DIR__."/../includes/classes/collection.php";
 require_once __DIR__."/../includes/classes/heroes_connector.php";
 
-final class Spells extends Collection {
+final class Features extends Collection {
     
     protected $filters = [
         "id" => "/^[0-9a-z\-]+$/",
@@ -17,9 +17,7 @@ final class Spells extends Collection {
         
         if (isset($this->params["id"])) {
             $result = $heroes->query(
-                    "SELECT s.*, ss.name AS spell_school FROM spell AS s
-                    INNER JOIN spell_school AS ss ON s.spell_school_id = ss.id
-                    WHERE s.id = ?",
+                    "SELECT * FROM feature WHERE id = ?",
                     [$this->params["id"]]);
             if (count($result) >= 1) {
                 return $result[0];
@@ -30,11 +28,25 @@ final class Spells extends Collection {
         }
         
         else {
-            return (new Heroes_Connector)->query("SELECT id, name FROM spell"); 
+            return (new Heroes_Connector)->query("SELECT id, name FROM feature ORDER BY name"); 
         }
+        
+    }
+    
+    protected function create() {    
+        
+        (new Heroes_Connector)->query(
+            "INSERT INTO feature (name, description) VALUES (?, ?)",
+            [
+                $this->params["name"],
+                $this->params["description"]
+            ]
+        );
+        
+        return null;
         
     }
     
 }
 
-new Spells();
+new Features();

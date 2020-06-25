@@ -5,7 +5,7 @@ header("Content-Type: application/json; charset=UTF-8");
 
 abstract class Collection {
     
-    protected $filters = [], $params = [], $remote_user;
+    protected $filters = [], $params = [], $remote_user, $unsafe_params = [];
     
     public function __construct(){
         
@@ -41,6 +41,7 @@ abstract class Collection {
     private function validate(){
         parse_str(file_get_contents("php://input"),$post_vars);
         foreach (array_merge($_GET,$post_vars) as $key=>$value) {
+            $this->unsafe_params[$key] = $value;
             if (isset($this->filters[$key])) {
                 if (preg_match($this->filters[$key],$value)) {
                     $this->params[$key] = $value;
