@@ -9,13 +9,15 @@ let
     connections = [],
     calls = [],
     localVideo,
-    localStream,
+    localStream = new MediaStream(),
     coord = {x:0 , y:0},
     path = [],
     drawings = [],
     myColor = "#39f",
     paint = false,
-    erase = false;
+    erase = false,
+    backgroundMusic = new Audio(),
+    backgroundMusicStream = backgroundMusic.captureStream();
 const
     ctx = $(".tabletop-area canvas")[0].getContext("2d"),
     mediaStreamConstraints = {
@@ -40,7 +42,7 @@ $(function(){
 });
 
 function populate(campaignCode){
-    window.history.pushState(null,null,`?campaign=${campaignCode}`);
+    window.history.pushState(null, null, `?campaign=${campaignCode}`);
     $.ajax({
         url: `/api/advancement`,
         dataType: "json",
@@ -54,6 +56,7 @@ function populate(campaignCode){
     $.ajax({
         url: `/api/campaigns/${campaignCode}`,
         dataType: "json",
+        async: false,
         success: function(data){
             $.each(data.heroes, function(i1,d1){
                 $(".player-select-modal ul").append(
@@ -75,12 +78,12 @@ function populate(campaignCode){
                 paintProgressBar($(".video-grid-area__item progress").last());
             });
             UIkit.modal(".player-select-modal").show();         
-            
         },
         error: function(){
             window.location.href = `error.php?code=404`;
         }
     });   
+
 }
 
 $(document).on("click", ".menu__dm-initiative-icon", function(){
@@ -684,6 +687,99 @@ $(document).on("click", ".dm-items-modal li button", function(){
     });
 });
 
+$(document).on("click", ".menu__dm-monsters-icon", function(){
+    $.ajax({
+        url: `/api/monsters`,
+        dataType: "json",
+        global: false,
+        success: function(data){
+            $(".dm-monsters-modal ul.uk-list").html(null);
+            $.each(data, function(i1,d1){
+                $(".dm-monsters-modal ul.uk-list").append(
+                    `<li class="clickable" data-monster-id="${d1.id}">
+                        <div class="toggle"><i class="far fa-star"></i> <span>${d1.name}</span> <i class="uk-align-right">CR ${d1.cr}</i></div>
+                        <div class="uk-accordion-content">
+                        </div>
+                    </li>`
+                );
+            });
+            UIkit.modal(".dm-monsters-modal").show();
+        }
+    });
+});
+$(document).on("click", ".dm-monsters-modal li[data-monster-id]", function(){
+    var id = $(this).attr("data-monster-id");
+    var element = $(this);
+    $.ajax({
+        url: `/api/monsters/${id}`,
+        dataType: "json",
+        global: false,
+        success: function(data){
+            element.find(".uk-accordion-content").html(
+                `<i>${data.type}</i><br><br>
+                <b>Armor class:</b> ${data.ac}<br>
+                <b>Hit Points:</b> ${data.hp}<br>
+                <b>Speed:</b> ${data.speed}<br>
+                <table class="uk-table uk-table-divider">
+                    <thead>
+                        <tr>
+                            <th>STR</th>
+                            <th>DEX</th>
+                            <th>CON</th>
+                            <th>INT</th>
+                            <th>WIS</th>
+                            <th>CHA</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>${data.str} (${abilityModifier(data.str)})</td>
+                            <td>${data.dex} (${abilityModifier(data.dex)})</td>
+                            <td>${data.con} (${abilityModifier(data.con)})</td>
+                            <td>${data.int} (${abilityModifier(data.int)})</td>
+                            <td>${data.wis} (${abilityModifier(data.wis)})</td>
+                            <td>${data.cha} (${abilityModifier(data.cha)})</td>
+                        </tr>
+                    </tbody>
+                </table>
+                ${converter.makeHtml(data.features)}<br>
+                <b>Actions</b><hr>${converter.makeHtml(data.actions)}`
+            );
+        }
+    });
+});
+$(document).on("click", ".dm-monsters-modal .uk-modal-footer > a", function(){
+    UIkit.modal(".monster-add-modal").show();
+});
+$(document).on("click", ".monster-add-modal button", function(){
+    var element = $(this).parents(".uk-modal-dialog").find(".uk-modal-body");
+    $.ajax({
+        url: `/api/monsters`,
+        type: "POST",
+        global: false,
+        data: {
+            name: element.find(".monster-add-modal__name").val(),
+            type: element.find(".monster-add-modal__type").val(),
+            hp: element.find(".monster-add-modal__hp").val(),
+            speed: element.find(".monster-add-modal__speed").val(),
+            cr: element.find(".monster-add-modal__cr").val(),
+            ac: element.find(".monster-add-modal__ac").val(),
+            str: element.find(".monster-add-modal__str").val(),
+            dex: element.find(".monster-add-modal__dex").val(),
+            con: element.find(".monster-add-modal__con").val(),
+            int: element.find(".monster-add-modal__int").val(),
+            wis: element.find(".monster-add-modal__wis").val(),
+            cha: element.find(".monster-add-modal__cha").val(),
+            features: element.find(".monster-add-modal__features").val(),
+            actions: element.find(".monster-add-modal__actions").val()
+        },
+        success: function(){
+            UIkit.notification(`Added ${element.find(".monster-add-modal__name").val()}`);
+            UIkit.modal(".monster-add-modal").hide();
+        }
+    });
+});
+
 $(document).on("click", ".menu__dm-features-icon", function(){
     $.ajax({
         url: `/api/features`,
@@ -780,6 +876,69 @@ $(document).on("click", ".dm-features-modal li button", function(){
     });
 });
 
+$(document).on("click", ".menu__dm-music-icon", function(){
+    $.ajax({
+        url: `/api/music/${get_url_params()['campaign']}`,
+        global: false,
+        dataType: "json",
+        success: function(data) {
+            console.log(data);
+            $(".dm-music-modal ul").html(null);
+            $.each(data, function(i1, d1){
+                var icon = "fa-play";
+                if ($(backgroundMusic).attr("src") == d1.path) {
+                    icon = "fa-pause";
+                }
+                $(".dm-music-modal ul").append(
+                    `<li data-path="${d1.path}">
+                        ${d1.name} 
+                        <span class="uk-align-right clickable" uk-tooltip="Play ${d1.name}"><i class="fas ${icon}"></i></span>
+                    </li>`
+                );
+            });
+        }
+    });
+    UIkit.modal(".dm-music-modal").show(); 
+});
+$(document).on("click", ".dm-music-modal i.fa-play", function(){
+    var path = $(this).parents("li").attr("data-path");
+    if (path != $(backgroundMusic).attr("src")) {
+        backgroundMusic.pause();
+        backgroundMusic = new Audio(path);
+        backgroundMusic.loop = true;
+    }
+    $(this).parents("ul").find("i.fa-pause").each(function(){
+        $(this).addClass("fa-play");
+        $(this).removeClass("fa-pause");
+    });
+    $(this).addClass("fa-pause");
+    $(this).removeClass("fa-play");
+    backgroundMusic.play();
+    backgroundMusicStream = backgroundMusic.captureStream();
+    backgroundMusicStream.addEventListener("addtrack", (event) => {
+        var track = event.track;
+        track.label = "backgroundMusic";
+        var tracks = localStream.getAudioTracks();
+        $.each(tracks, function(i1,d1){
+            if (d1.label = "backgroundMusic") {
+                localStream.removeTrack(d1);
+            }
+        });
+        localStream.addTrack(track);
+        $.each(connections, function(i1,d1){
+            d1.send({
+                type: "directive",
+                directive: "reconnect"
+            });
+        });
+    });
+});
+$(document).on("click", ".dm-music-modal i.fa-pause", function(){
+    backgroundMusic.pause();
+    $(this).removeClass("fa-pause");
+    $(this).addClass("fa-play");
+});
+
 $(document).on("keyup", ".uk-modal-header input.filter", function(){
     var filter = $(this).val().toLowerCase();
     var order = 1;
@@ -809,115 +968,133 @@ $(document).on("click", ".player-select-modal li", function(){
 });
 function join(playerId){
     
-    if (playerId == null) {
-        $(".dm-visible").show();
-        $(".video-grid-area__item span").addClass("clickable");
-        $(document).on("click", ".video-grid-area__item span", function(){
-            populateCharacterDetailModal($(this).parents(".video-grid-area__item").attr("data-character-id"));
-        });
-        $(document).on("click", ".video-grid-area__item progress, .tabletop-area__initiative-tracker progress", function(){
-            var element = $(this);
-            UIkit.modal.prompt("Change:").then(function(delta){
-                element.val(parseInt(element.val()) + parseInt(delta));
-                paintProgressBar(element);
-                var heroId = element.parents(".video-grid-area__item").attr("data-character-id");
-                $.ajax({
-                    url: `/api/heroes/${heroId}`,
-                    type: "PATCH",
-                    data: {
-                        update: {
-                            hp: parseInt(element.val())
-                        }
-                    },
-                    dataType: "json",
-                    global: false,
-                    success: function(){
-                        $.each(connections, function(i1,d1){
-                            d1.send({
-                                type: "directive",
-                                directive: "updateHp",
-                                hero: heroId,
-                                change: delta
+    navigator.mediaDevices.getUserMedia(mediaStreamConstraints).then(function(stream){
+        
+        localStream = stream;
+    
+        if (playerId == null) {
+            console.log(localStream.getTracks());
+            $(".dm-visible").show();
+            $(".video-grid-area__item span").addClass("clickable");
+            $(document).on("click", ".video-grid-area__item span", function(){
+                populateCharacterDetailModal($(this).parents(".video-grid-area__item").attr("data-character-id"));
+            });
+            $(document).on("click", ".video-grid-area__item progress, .tabletop-area__initiative-tracker progress", function(){
+                var element = $(this);
+                UIkit.modal.prompt("Change:").then(function(delta){
+                    element.val(parseInt(element.val()) + parseInt(delta));
+                    paintProgressBar(element);
+                    var heroId = element.parents(".video-grid-area__item").attr("data-character-id");
+                    $.ajax({
+                        url: `/api/heroes/${heroId}`,
+                        type: "PATCH",
+                        data: {
+                            update: {
+                                hp: parseInt(element.val())
+                            }
+                        },
+                        dataType: "json",
+                        global: false,
+                        success: function(){
+                            $.each(connections, function(i1,d1){
+                                d1.send({
+                                    type: "directive",
+                                    directive: "updateHp",
+                                    hero: heroId,
+                                    change: delta
+                                });
                             });
-                        });
-                    }
+                        }
+                    });
                 });
             });
-        });
-        localVideo = $(".tabletop-area video")[0];
-        navigator.mediaDevices.getUserMedia(mediaStreamConstraints).then(function(stream){
-            localStream = stream;
-            localVideo.srcObject = localStream;
+            localVideo = $(".tabletop-area video")[0];
             drawCanvas();
-        });
-    } else {
-        $(".pc-visible").show();
-        characterId = playerId;
-        $.ajax({
-            url: `/api/heroes/${playerId}`,
-            dataType: "json",
-            global: false,
-            async: false,
-            success: function(data){
-                player = data;
-            }
-        });
-    }
-    
-    $(".video-grid-area__item video").each(function(){
-        var videoId = $(this).parents(".video-grid-area__item").attr("data-character-id");
-        if (videoId == playerId) {
-            localVideo = $(this)[0];
-            navigator.mediaDevices.getUserMedia(mediaStreamConstraints).then(function(stream){
-                localStream = stream;
-                localVideo.srcObject = localStream;
+        } else {
+            $(".pc-visible").show();
+            characterId = playerId;
+            $.ajax({
+                url: `/api/heroes/${playerId}`,
+                dataType: "json",
+                global: false,
+                async: false,
+                success: function(data){
+                    player = data;
+                }
             });
         }
-    });
-            
-    var id = `${get_url_params()["campaign"]}${playerId == null ? "" : `-${playerId}`}`;  
-    peer = new Peer(id, {
-        host: "video.heroes.willandbritta.com",
-        debug: 2
-    });
-    peer.on("open", function(id){
-        console.log(`Peer ID: ${id}`);
-        connectPeers();
-    });
-    peer.on("connection", function(conn){
-        connections.push(conn);
-        conn.on("open", function(){
-        });
-        conn.on("data", function(data){
-            handleMessage(data);
-            drawCanvas();
-        });
-        console.log(`Connected to ${conn.peer}`);
-    });
-    peer.on("call", function(call){
-        call.answer(localStream);
-        call.on("stream", function(stream){
-            console.log(`Inbound call from ${call.metadata.from}`);
-            if (call.metadata.from == null) {
-                $(".tabletop-area video")[0].srcObject = stream;
-                drawings = [];
-                drawCanvas();
-            } else {
-                $(`.video-grid-area__item[data-character-id="${call.metadata.from}"] video`)[0].srcObject = stream;
+
+        $(".video-grid-area__item video").each(function(){
+            var videoId = $(this).parents(".video-grid-area__item").attr("data-character-id");
+            if (videoId == playerId) {
+                localVideo = $(this)[0];
             }
         });
+        
+        localVideo.srcObject = localStream;
+        localVideo.muted = true;
+
+        var id = `${get_url_params()["campaign"]}${playerId == null ? "" : `-${playerId}`}`;  
+        peer = new Peer(id, {
+            host: "video.heroes.willandbritta.com",
+            debug: 2
+        });
+        peer.on("open", function(id){
+            console.log(`Peer ID: ${id}`);
+            connectPeers();
+        });
+        peer.on("connection", function(conn){
+            console.log(conn);
+            $.each(connections, function(i1,d1){
+                if (d1.peer == conn.peer) {
+                    connections.splice(i1,1);
+                }
+            });
+            connections.push(conn);
+            conn.on("open", function(){
+            });
+            conn.on("data", function(data){
+                handleMessage(data);
+                drawCanvas();
+            });
+            console.log(`Connected to ${conn.peer}`);
+        });
+        peer.on("call", function(call){
+            call.answer(localStream);
+            call.on("stream", function(stream){
+                console.log(`Inbound call from ${call.metadata.from}`);
+                if (call.metadata.from == null) {
+                    $(".tabletop-area video")[0].srcObject = stream;
+                    drawings = [];
+                    drawCanvas();
+                } else {
+                    $(`.video-grid-area__item[data-character-id="${call.metadata.from}"] video`)[0].srcObject = stream;
+                }
+            });
+        });
+            
     });
 
 }
 function connectPeers(){
-    
+        
     if (characterId != null) {
+        $.each(connections, function(i1,d1){
+            if (d1.peer == get_url_params()["campaign"]) {
+                connections.splice(i1,1);
+            }
+        });
         connections.push(connectPeer(get_url_params()["campaign"], null));
     }
     
     $(".video-grid-area__item video").each(function(){
         var videoId = $(this).parents(".video-grid-area__item").attr("data-character-id");
         if (videoId != characterId) {
+            $.each(connections, function(i1,d1){
+                if (d1.peer == `${get_url_params()["campaign"]}-${videoId}`) {
+                    connections.splice(i1,1);
+                }
+            });
             connections.push(connectPeer(`${get_url_params()["campaign"]}-${videoId}`, videoId));
         }
     });
@@ -925,9 +1102,7 @@ function connectPeers(){
 }
 function connectPeer(id, peerPlayerId){
     var name = player != null ? player.name : "The DM";
-    var conn = peer.connect(id, {
-        reliable: true
-    });
+    var conn = peer.connect(id);
     conn.on("open", function(){
         console.log(`Connected to ${conn.peer}`); 
         conn.send({
@@ -984,6 +1159,10 @@ function handleMessage(data){
                     var element = $(`.video-grid-area__item[data-character-id="${data.hero}"] progress`);
                     element.val(parseInt(element.val()) + parseInt(data.change));
                     paintProgressBar(element);
+                    break;
+                case "reconnect":
+                    connections = [];
+                    connectPeers();
                     break;
             }
             break;
@@ -1128,6 +1307,7 @@ $(".chat-area__textbox").on("keyup", function(e){
         }
         handleMessage(message);
         $.each(connections, function(i1,d1){
+            console.log(d1);
             d1.send(message);
         });
     }
@@ -1222,10 +1402,6 @@ function get_url_params(){
         }
     }
     return params;
-}
-
-function getMediaDevices(){
-    
 }
 
 Array.prototype.equals = function (array) {
