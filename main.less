@@ -20,36 +20,12 @@ video {
     cursor: pointer;
 }
 
-.uk-progress {
-    
-    &::-webkit-progress-bar {
-        background: #333;
-    }
-    
-    &[p="5"]::-webkit-progress-value {
-        background: rgb(0,255,0);
-    }
-    &[p="4"]::-webkit-progress-value {
-        background: rgb(125,255,0);
-    }
-    &[p="3"]::-webkit-progress-value {
-        background: rgb(255,255,0);
-    }
-    &[p="2"]::-webkit-progress-value {
-        background: rgb(255,125,0);
-    }
-    &[p="1"]::-webkit-progress-value {
-        background: rgb(255,0,0);
-    }
-    
-}
-
 .container {
     width: calc(100% - 40px - 64px);
     height: calc(100% - 40px);
     margin: 20px;
     display: grid;
-    gap: 20px;
+    gap: 20px;    
     grid-template-areas:
         "t c"
         "v c";
@@ -104,8 +80,8 @@ video {
         align-items: center;
                
         > i {
-            font-size: 2.5em;
-            margin: 0 20px;
+            font-size: 2em;
+            margin: 0 15px;
         }
 
         > i:hover {
@@ -119,13 +95,30 @@ video {
         
     }
     
-    .tabletop-area__initiative-tracker {
+    initiative-tracker {
         
         display: flex;
         flex-direction: column;
         background: white;
         width: 240px;
         text-align: left;
+        
+        health-bar {
+    
+            display: block;
+            overflow: hidden;
+            position: relative;
+            border: 1px solid white;
+            border-radius: 10px;
+            width: calc (100% - 2px);
+            height: 10px;
+            margin-top: 5px;
+
+            &:not(:disabled):hover {
+                cursor: pointer;
+            }
+
+        }
         
         ul {
             flex-grow: 1;
@@ -179,9 +172,19 @@ video {
             
         }
         
-        > progress {
-            margin-top: 10px;
-            margin-bottom: 0;
+        health-bar {
+    
+            display: block;
+            overflow: hidden;
+            position: relative;
+            border: 1px solid #333;
+            width: calc (100% - 2px);
+            height: 12px;
+
+            &:not(:disabled):hover {
+                cursor: pointer;
+            }
+
         }
         
         span {
@@ -229,21 +232,15 @@ video {
         
     }
     
-    .chat-area__dice {
+    dice-tray {
         
         width: 100%;
         background: #eee;
         text-align: center;
-        font-size: 2em;
+        font-size: 1.5em;
         
         > table {
-            
             margin-bottom: 0;
-        
-            i.fas:hover {
-                cursor: pointer;
-            }
-        
         }
         
     }
@@ -269,17 +266,22 @@ video {
     background: #333 !important;
     text-align: center;
     
-    > i {
-        font-size: 2.5em;
+    .menu-top, .menu-bottom {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    i {
+        font-size: 2em;
         margin: 20px 0;
     }
     
-    > i:hover {
+    i:hover {
         color: #eee;
         cursor: pointer;
     }
     
-    > .spacer {
+    .spacer {
         flex-grow: 1;
     }
     
@@ -319,7 +321,7 @@ video {
     
 }
 
-.dm-spells-modal, .dm-items-modal, .dm-features-modal, .dm-monsters-modal {
+.list-modal {
     
     .uk-modal-body {
         
